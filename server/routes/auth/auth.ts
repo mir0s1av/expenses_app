@@ -1,11 +1,12 @@
-import { Hono } from 'hono';
+import { createRouter } from "@/server/lib/create-app";
+
 import {
   getUserMiddleware,
   kindeClient,
   sessionManager,
-} from "../kinde.client";
+} from "../../kinde.client";
 
-export const authRoutes = new Hono()
+export const authRoutes = createRouter()
   .get("login", async (ctx) => {
     const loginUrl = await kindeClient.login(sessionManager(ctx));
     return ctx.redirect(loginUrl.toString());

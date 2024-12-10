@@ -1,8 +1,8 @@
-import { CreateExpenseDto } from '@server/dto/createExpense.dto';
-import { queryOptions } from '@tanstack/react-query';
-import { hc } from 'hono/client';
-import { type ApiRoutes } from "@server/app";
-const QueryKeys = [];
+import { CreateExpenseDto } from "@server/dto/createExpense.dto";
+import { queryOptions } from "@tanstack/react-query";
+import { hc } from "hono/client";
+import { ApiRoutes } from "../../../server/app";
+
 const client = hc<ApiRoutes>("/");
 export const api = client.api;
 async function fetchCurrentUser() {

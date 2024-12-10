@@ -1,5 +1,5 @@
-import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { createMiddleware } from 'hono/factory';
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { createMiddleware } from "hono/factory";
 import {
   createKindeServerClient,
   GrantType,
@@ -7,6 +7,8 @@ import {
   type UserType,
 } from "@kinde-oss/kinde-typescript-sdk";
 import type { Context } from "hono";
+import type { PinoLogger } from "hono-pino";
+import type { AppBindings } from "./types/app.schema";
 
 export const kindeClient = createKindeServerClient(
   GrantType.AUTHORIZATION_CODE,
@@ -49,32 +51,35 @@ export const sessionManager = (ctx: Context): SessionManager => ({
   },
 });
 
-type Env = {
-  Variables: {
-    user: UserType;
-  };
-};
+// type Env = {
+//   Variables: {
+//     user: UserType;
+//     logger: PinoLogger;
+//   };
+// };
 
-export const getUserMiddleware = createMiddleware<Env>(async (ctx, next) => {
-  try {
-    const isAuthenticated = await kindeClient.isAuthenticated(
-      sessionManager(ctx)
-    );
-    console.log(isAuthenticated);
-    if (!isAuthenticated) {
+export const getUserMiddleware = createMiddleware<AppBindings>(
+  async (ctx, next) => {
+    try {
+      const isAuthenticated = await kindeClient.isAuthenticated(
+        sessionManager(ctx)
+      );
+      console.log(isAuthenticated);
+      if (!isAuthenticated) {
+        return ctx.json({ error: "Unauthorised" }, 403);
+      }
+      const user = await kindeClient.getUserProfile(sessionManager(ctx));
+
+      // const query = await db
+      //   .select()
+      //   .from(expenses)
+      //   .where(eq(expenses.userId, user.id));
+
+      ctx.set("user", user);
+      await next();
+    } catch (error) {
+      console.error(error);
       return ctx.json({ error: "Unauthorised" }, 403);
     }
-    const user = await kindeClient.getUserProfile(sessionManager(ctx));
-
-    // const query = await db
-    //   .select()
-    //   .from(expenses)
-    //   .where(eq(expenses.userId, user.id));
-
-    ctx.set("user", user);
-    await next();
-  } catch (error) {
-    console.error(error);
-    return ctx.json({ error: "Unauthorised" }, 403);
   }
-});
+);
